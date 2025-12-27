@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Album Liburan Elegan</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(135deg, #fdfcfb 0%, #e2d1c3 100%);
+            overflow: hidden;
+            height: 100vh;
+            margin: 0;
+        }
+        h1, h2 {
+            font-family: 'Playfair Display', serif;
+        }
+        .glass {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(15px);
+            -webkit-backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.15);
+        }
+        .page {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            transition: transform 0.8s cubic-bezier(0.645, 0.045, 0.355, 1), opacity 0.8s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            box-sizing: border-box;
+        }
+        .page-hidden-right {
+            transform: translateX(100%);
+            opacity: 0;
+            pointer-events: none;
+        }
+        .page-hidden-left {
+            transform: translateX(-100%);
+            opacity: 0;
+            pointer-events: none;
+        }
+        .page-active {
+            transform: translateX(0);
+            opacity: 1;
+            z-index: 10;
+        }
+        .photo-frame {
+            width: 100%;
+            max-width: 400px;
+            aspect-ratio: 3/4;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            position: relative;
+        }
+        .photo-frame img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 10s ease;
+        }
+        .page-active img {
+            transform: scale(1.1);
+        }
+        @keyframes pulse-soft {
+            0% { transform: scale(1); opacity: 0.8; }
+            50% { transform: scale(1.05); opacity: 1; }
+            100% { transform: scale(1); opacity: 0.8; }
+        }
+        .animate-pulse-soft {
+            animation: pulse-soft 2s infinite ease-in-out;
+        }
+        .shimmer {
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(to right, rgba(255,255,255,0) 0%, rgba(255,255,255,0.3) 50%, rgba(255,255,255,0) 100%);
+            transform: skewX(-25deg);
+            animation: shimmer 3s infinite;
+        }
+        @keyframes shimmer {
+            100% { left: 150%; }
+        }
+        .music-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 100;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body class="bg-stone-100 text-stone-800">
+
+    <!-- Background Audio - Using a more reliable romantic piano track -->
+    <audio id="bgMusic" loop preload="auto">
+        <source src="https://www.chosic.com/wp-content/uploads/2021/04/Warm-Memories-Emotional-Inspiring-Piano.mp3" type="audio/mpeg">
+    </audio>
+
+    <div id="album-container" class="relative w-full h-screen overflow-hidden">
+        
+        <!-- Cover Depan -->
+        <div id="page-0" class="page page-active bg-[url('https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&q=80&w=1000')] bg-cover bg-center">
+            <div class="absolute inset-0 bg-stone-900/40"></div>
+            <div class="glass p-12 py-16 rounded-[40px] flex flex-col items-center justify-center text-center z-20 w-[85%] max-w-[400px] border-white/20 shadow-2xl">
+                <span class="text-[10px] text-white/60 tracking-[0.5em] uppercase mb-4 block w-full">Wonderful Journey With</span>
+                <h1 class="text-5xl text-white mb-4 font-bold tracking-tighter italic w-full text-center">ELKA</h1>
+                <div class="w-16 h-[1px] bg-gradient-to-r from-transparent via-white/50 to-transparent mb-6"></div>
+                <p class="text-white/80 italic font-light text-sm tracking-wide leading-relaxed px-4">Keindahan yang abadi dalam setiap lembar cerita</p>
+                <button onclick="startAlbum()" class="mt-10 px-12 py-4 bg-white/10 hover:bg-white/20 text-white rounded-full border border-white/40 backdrop-blur-lg transition-all uppercase tracking-[0.3em] text-[10px] font-bold animate-pulse-soft">
+                    Buka Album
+                </button>
+            </div>
+        </div>
+
+        <!-- Photo Pages will be injected here -->
+        <div id="photo-pages"></div>
+
+        <!-- Cover Belakang -->
+        <div id="page-final" class="page page-hidden-right bg-[url('https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&q=80&w=1000')] bg-cover bg-center">
+            <div class="absolute inset-0 bg-stone-900/70 backdrop-blur-xl"></div>
+            
+            <div class="relative z-20 flex flex-col items-center justify-center w-full">
+                <div class="glass p-12 py-16 rounded-[60px] flex flex-col items-center text-center w-[85%] max-w-[400px] border-white/10 shadow-2xl">
+                    <div class="mb-8">
+                        <svg class="w-10 h-10 text-white/40" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"></path>
+                        </svg>
+                    </div>
+                    
+                    <h2 class="text-4xl text-white mb-2 font-serif tracking-tight italic w-full">The End.</h2>
+                    <p class="text-[9px] text-white/30 tracking-[0.5em] uppercase mb-10 w-full">Terima kasih atas momen ini</p>
+                    
+                    <div class="flex flex-col gap-4 w-full items-center">
+                        <button onclick="restartAlbum()" class="w-full max-w-[200px] py-4 bg-white/10 hover:bg-white/20 text-white rounded-full border border-white/20 transition-all text-[10px] tracking-[0.4em] uppercase font-bold text-center">
+                            Ulangi
+                        </button>
+                        <button onclick="location.reload()" class="w-full max-w-[200px] py-4 bg-red-500/10 hover:bg-red-500/20 text-red-200 rounded-full border border-red-500/20 transition-all text-[10px] tracking-[0.4em] uppercase font-bold text-center">
+                            Exit
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Music Toggle -->
+    <div id="musicToggle" class="music-btn glass hidden" onclick="toggleMusic()">
+        <svg id="musicIcon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-stone-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+        </svg>
+    </div>
+
+    <style>
+        /* Custom Volume Slider Styling */
+        input[type=range] {
+            -webkit-appearance: none;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            height: 4px;
+            outline: none;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 15px;
+            height: 15px;
+            background: white;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+    </style>
+
+    <script>
+        /**
+         * SCRIPT SETTINGS
+         */
+        
+        // 1. MASUKKAN URL MUSIK DI SINI (Link file .mp3)
+        const musicUrl = "https://teddymutadi.github.io/album-haji/romantik2.mp3";
+
+        // 2. MASUKKAN URL FOTO-FOTO ANDA DI SINI
+        const photos = [
+            "https://teddymutadi.github.io/pasuruan/tia1.jfif?auto=format&fit=crop&q=80&w=800",
+            "https://teddymutadi.github.io/pasuruan/teddy1.jfif?auto=format&fit=crop&q=80&w=800",
+            "https://teddymutadi.github.io/pasuruan/teddy2.jfif?auto=format&fit=crop&q=80&w=800",
+            "https://teddymutadi.github.io/pasuruan/teddy3.jfif?auto=format&fit=crop&q=80&w=800",
+            "https://teddymutadi.github.io/pasuruan/teddy4.jfif?auto=format&fit=crop&q=80&w=800",
+            "https://teddymutadi.github.io/pasuruan/teddy5.jfif?auto=format&fit=crop&q=80&w=800",
+            "https://teddymutadi.github.io/pasuruan/teddy6.jfif?auto=format&fit=crop&q=80&w=800",
+            "https://teddymutadi.github.io/pasuruan/teddy7.jfif?auto=format&fit=crop&q=80&w=800",
+            "https://teddymutadi.github.io/pasuruan/teddy8.jfif?auto=format&fit=crop&q=80&w=800",
+            "https://teddymutadi.github.io/pasuruan/teddy9.jfif?auto=format&fit=crop&q=80&w=800",
+            "https://teddymutadi.github.io/pasuruan/teddy10.jfif?auto=format&fit=crop&q=80&w=800",
+            "https://teddymutadi.github.io/pasuruan/teddy11.jfif?auto=format&fit=crop&q=80&w=800",
+            "https://teddymutadi.github.io/pasuruan/teddy12.jfif?auto=format&fit=crop&q=80&w=800",
+            "https://teddymutadi.github.io/pasuruan/teddy13.jfif?auto=format&fit=crop&q=80&w=800",
+            "https://teddymutadi.github.io/pasuruan/teddy14.jfif?auto=format&fit=crop&q=80&w=800",
+            "https://teddymutadi.github.io/pasuruan/teddy15.jfif?auto=format&fit=crop&q=80&w=800",
+            "https://teddymutadi.github.io/pasuruan/teddy16.jfif?auto=format&fit=crop&q=80&w=800",
+            "https://teddymutadi.github.io/pasuruan/teddy17.jfif?auto=format&fit=crop&q=80&w=800",
+            "https://teddymutadi.github.io/pasuruan/teddy18.jfif?auto=format&fit=crop&q=80&w=800",
+            "https://teddymutadi.github.io/pasuruan/teddy19.jfif?auto=format&fit=crop&q=80&w=800",
+            "https://teddymutadi.github.io/pasuruan/teddy20.jfif?auto=format&fit=crop&q=80&w=800",
+            "https://teddymutadi.github.io/pasuruan/teddy21.jfif?auto=format&fit=crop&q=80&w=800",
+            "https://teddymutadi.github.io/pasuruan/teddy22.jfif?auto=format&fit=crop&q=80&w=800",
+            "https://teddymutadi.github.io/pasuruan/teddy23.jfif?auto=format&fit=crop&q=80&w=800",
+            "https://teddymutadi.github.io/pasuruan/teddy24.jfif?auto=format&fit=crop&q=80&w=800",
+            "https://teddymutadi.github.io/pasuruan/teddy25.jfif?auto=format&fit=crop&q=80&w=800",
+            "https://teddymutadi.github.io/pasuruan/teddy26.jfif?auto=format&fit=crop&q=80&w=800",
+            "https://teddymutadi.github.io/pasuruan/teddy27.jfif?auto=format&fit=crop&q=80&w=800",
+            "https://teddymutadi.github.io/pasuruan/teddy28.jfif?auto=format&fit=crop&q=80&w=800",
+            "https://teddymutadi.github.io/pasuruan/teddy29.jfif?auto=format&fit=crop&q=80&w=800",
+            "https://teddymutadi.github.io/pasuruan/teddy30.jfif?auto=format&fit=crop&q=80&w=800",
+            "https://teddymutadi.github.io/pasuruan/teddy31.jfif?auto=format&fit=crop&q=80&w=800",
+            "https://teddymutadi.github.io/pasuruan/teddy32.jfif?auto=format&fit=crop&q=80&w=800",
+            "https://teddymutadi.github.io/pasuruan/teddy33.jfif?auto=format&fit=crop&q=80&w=800",
+          ];
+
+        const container = document.getElementById('photo-pages');
+        const bgMusic = document.getElementById('bgMusic');
+        let currentPage = 0;
+        let isMusicPlaying = false;
+
+        // Set Music Source
+        bgMusic.src = musicUrl;
+
+        // Create Photo Pages
+        photos.forEach((url, index) => {
+            const pageDiv = document.createElement('div');
+            pageDiv.id = `page-${index + 1}`;
+            pageDiv.className = 'page page-hidden-right bg-stone-50/30';
+            pageDiv.onclick = nextPage;
+            
+            pageDiv.innerHTML = `
+                <div class="flex flex-col items-center w-full max-w-sm">
+                    <div class="photo-frame glass p-3 border-white/40">
+                        <div class="w-full h-full rounded-xl overflow-hidden relative">
+                            <img src="${url}" alt="Holiday Photo ${index + 1}">
+                            <div class="shimmer"></div>
+                        </div>
+                    </div>
+                    <div class="mt-8 text-center px-8">
+                        <span class="text-[9px] tracking-[0.4em] uppercase text-stone-400 mb-3 block">Moment ${index + 1}</span>
+                        <p class="italic text-stone-600 font-light text-sm leading-relaxed">"Keindahan yang abadi dalam setiap lembar cerita."</p>
+                    </div>
+                </div>
+            `;
+            container.appendChild(pageDiv);
+        });
+
+        function startAlbum() {
+            isMusicPlaying = true;
+            bgMusic.volume = 0.6; // Default middle volume
+            
+            bgMusic.play().then(() => {
+                showControls();
+            }).catch(err => {
+                console.log("Audio block: " + err);
+                showControls(); // Still show controls so user can manual play
+            });
+
+            nextPage();
+        }
+
+        function showControls() {
+            const controls = document.getElementById('musicToggle');
+            controls.classList.remove('hidden');
+            // Membuat panel kontrol lebih luas dan jelas
+            controls.classList.add('flex', 'items-center', 'gap-3', 'px-4', 'py-2', 'w-auto', 'rounded-full', 'shadow-lg');
+            
+            controls.innerHTML = `
+                <div class="flex items-center gap-2 border-r border-stone-400/30 pr-3">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 text-stone-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
+                    </svg>
+                    <input type="range" id="volumeSlider" min="0" max="1" step="0.05" value="0.6" 
+                        class="w-24 h-1 cursor-pointer accent-stone-600" onclick="event.stopPropagation()">
+                </div>
+                <div onclick="toggleMusic(); event.stopPropagation()" class="cursor-pointer hover:scale-110 transition-transform">
+                    <svg id="musicIcon" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-stone-700 ${isMusicPlaying ? 'animate-pulse' : ''}" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+                    </svg>
+                </div>
+            `;
+
+            document.getElementById('volumeSlider').addEventListener('input', (e) => {
+                bgMusic.volume = e.target.value;
+                // Jika volume > 0 dan musik sedang pause, kita bisa opsional menyalakannya kembali
+                if (e.target.value > 0 && bgMusic.paused) {
+                    toggleMusic();
+                }
+            });
+        }
+
+        function nextPage() {
+            if (isMusicPlaying && bgMusic.paused) {
+                bgMusic.play().catch(() => {});
+            }
+
+            const currentEl = document.getElementById(`page-${currentPage}`);
+            const nextIdx = currentPage + 1;
+            const nextEl = (nextIdx === photos.length + 1) 
+                            ? document.getElementById('page-final') 
+                            : document.getElementById(`page-${nextIdx}`);
+
+            if (nextEl) {
+                if (currentEl) {
+                    currentEl.classList.remove('page-active');
+                    currentEl.classList.add('page-hidden-left');
+                }
+                nextEl.classList.remove('page-hidden-right');
+                nextEl.classList.add('page-active');
+                currentPage = nextIdx;
+            }
+        }
+
+        function restartAlbum() {
+            document.querySelectorAll('.page').forEach(p => {
+                p.classList.remove('page-active', 'page-hidden-left', 'page-hidden-right');
+                p.classList.add('page-hidden-right');
+            });
+            
+            const cover = document.getElementById('page-0');
+            cover.classList.remove('page-hidden-right');
+            cover.classList.add('page-active');
+            currentPage = 0;
+        }
+
+        function toggleMusic() {
+            const icon = document.getElementById('musicIcon');
+            if (isMusicPlaying) {
+                bgMusic.pause();
+                icon.style.opacity = '0.4';
+                icon.classList.remove('animate-pulse');
+            } else {
+                bgMusic.play();
+                icon.style.opacity = '1';
+                icon.classList.add('animate-pulse');
+            }
+            isMusicPlaying = !isMusicPlaying;
+        }
+
+        // Global listeners for audio unlocking on mobile
+        const unlockAudio = () => {
+            if (isMusicPlaying && bgMusic.paused) bgMusic.play().catch(() => {});
+        };
+        document.body.addEventListener('click', unlockAudio);
+        document.body.addEventListener('touchstart', unlockAudio);
+    </script>
+</body>
+</html>
