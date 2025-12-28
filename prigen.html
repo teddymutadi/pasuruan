@@ -1,0 +1,502 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Elkairo Journey</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        :root {
+            --gold: #d4af37;
+            --glass: rgba(255, 255, 255, 0.03);
+            --crystal-border: rgba(255, 255, 255, 0.2);
+        }
+
+        body {
+            margin: 0;
+            background: #050505;
+            color: white;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            perspective: 2000px;
+        }
+
+        /* Background Animasi Bokeh */
+        .bokeh-container {
+            position: fixed;
+            inset: 0;
+            z-index: -1;
+            overflow: hidden;
+            background: radial-gradient(circle at 50% 50%, #111 0%, #000 100%);
+        }
+
+        .bokeh {
+            position: absolute;
+            border-radius: 50%;
+            background: radial-gradient(circle at center, rgba(251, 191, 36, 0.08) 0%, transparent 70%);
+            filter: blur(40px);
+            animation: moveBokeh linear infinite;
+        }
+
+        @keyframes moveBokeh {
+            0% { transform: translate(0, 0) scale(1); }
+            50% { transform: translate(100px, 50px) scale(1.2); }
+            100% { transform: translate(-50px, 100px) scale(1); }
+        }
+
+        .deck-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transform-style: preserve-3d;
+        }
+
+        /* THE CRYSTAL FRAME - DESAIN BARU */
+        .photo-card {
+            position: absolute;
+            width: 260px; 
+            height: 360px; 
+            transition: all 1s cubic-bezier(0.16, 1, 0.3, 1);
+            cursor: pointer;
+            user-select: none;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            
+            /* Layering for Crystal Effect */
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 12px;
+            box-shadow: 
+                0 40px 100px rgba(0,0,0,0.8),
+                inset 0 0 0 1px rgba(255,255,255,0.05);
+            
+            -webkit-box-reflect: below 20px linear-gradient(transparent 70%, rgba(255,255,255,0.05));
+        }
+
+        /* Edge Highlight for Crystal Look */
+        .photo-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border: 1px solid transparent;
+            background: linear-gradient(135deg, rgba(255,255,255,0.4) 0%, transparent 40%, transparent 60%, rgba(255,255,255,0.2) 100%) border-box;
+            -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: destination-out;
+            mask-composite: exclude;
+            pointer-events: none;
+        }
+
+        .photo-frame-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: #000;
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.8);
+        }
+
+        .photo-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 1.2s cubic-bezier(0.16, 1, 0.3, 1);
+            opacity: 0.9;
+        }
+
+        .photo-card:hover img {
+            transform: scale(1.05);
+            opacity: 1;
+        }
+
+        /* Light Sweep Effect */
+        .shimmer-sweep {
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+            transform: skewX(-20deg);
+            animation: sweep 6s infinite;
+        }
+
+        @keyframes sweep {
+            0% { left: -100%; }
+            20% { left: 200%; }
+            100% { left: 200%; }
+        }
+
+        /* Floating Animation */
+        .active-float {
+            animation: float 5s ease-in-out infinite alternate;
+        }
+
+        @keyframes float {
+            0% { transform: translateZ(120px) translateY(0px) rotateX(0deg); }
+            100% { transform: translateZ(150px) translateY(-20px) rotateX(1deg); }
+        }
+
+        /* Cover & Back Styles */
+        .special-card {
+            background: linear-gradient(145deg, #1a1a1a, #000);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid rgba(251, 191, 36, 0.3);
+        }
+
+        .shimmer {
+            position: absolute;
+            top: -150%;
+            left: -150%;
+            width: 400%;
+            height: 400%;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+            transform: rotate(45deg);
+            animation: shimmerEffect 4s infinite;
+        }
+
+        @keyframes shimmerEffect {
+            0% { transform: translateX(-50%) translateY(-50%) rotate(45deg); }
+            100% { transform: translateX(50%) translateY(50%) rotate(45deg); }
+        }
+
+        /* Floating Animation */
+        .active-float {
+            animation: floatAnim 4s ease-in-out infinite alternate;
+        }
+
+        @keyframes floatAnim {
+            0% { transform: translateZ(100px) translateY(0px) rotateX(0deg); }
+            100% { transform: translateZ(120px) translateY(-15px) rotateX(2deg); }
+        }
+
+        /* UI Elements */
+        .overlay-ui {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 10px 20px;
+            z-index: 50;
+        }
+
+        .nav-btn {
+            pointer-events: auto;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            backdrop-filter: blur(10px);
+            padding: 12px;
+            border-radius: 50%;
+            color: white;
+            transition: all 0.3s;
+        }
+
+        .nav-btn:active {
+            transform: scale(0.9);
+            background: rgba(251, 191, 36, 0.2);
+        }
+
+        /* Music & Volume Controls */
+        #music-control {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 100;
+            pointer-events: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            background: rgba(0,0,0,0.4);
+            padding: 10px;
+            border-radius: 30px;
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--glass-border);
+        }
+
+
+
+        .detail-view {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.95);
+            backdrop-filter: blur(20px);
+            z-index: 1000;
+            display: none;
+            opacity: 0;
+            transition: opacity 0.5s;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .detail-view.active {
+            display: flex;
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="bokeh-container" id="bokeh-bg"></div>
+
+    <!-- Music Control -->
+    <div id="music-control">
+        <button onclick="toggleMusic()" class="nav-btn">
+            <svg id="music-on" class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"></path></svg>
+            <svg id="music-off" class="w-6 h-6 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3l18 18"></path></svg>
+        </button>
+    </div>
+
+    <div class="overlay-ui">
+        <!-- Top Title: High Up -->
+        <div class="text-center pt-4">
+            <h1 class="text-amber-400 font-bold tracking-[0.5em] text-[10px] mb-1">DURIAN TRIP</h1>
+            <div class="h-[1px] w-8 bg-amber-400/30 mx-auto"></div>
+        </div>
+
+        <!-- Bottom Controls: Pushed to the very bottom -->
+        <div class="flex flex-col items-center gap-2 pb-4">
+            <div class="flex items-center justify-center gap-8 w-full">
+                <button onclick="prev()" class="nav-btn scale-90 pointer-events-auto shadow-lg">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
+                </button>
+                
+                <div id="counter" class="text-[10px] font-mono tracking-[0.4em] text-amber-400/60 bg-black/40 px-3 py-1 rounded-full border border-white/10 backdrop-filter blur-sm">01 / 07</div>
+
+                <button onclick="next()" class="nav-btn scale-90 pointer-events-auto shadow-lg">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                </button>
+            </div>
+            <p class="text-[7px] tracking-[0.3em] text-white/20 uppercase">Swipe or Tap Photo to Advance</p>
+        </div>
+    </div>
+
+    <div id="deck" class="deck-container">
+        <!-- Cards injected by JS -->
+    </div>
+
+    <!-- Image Detail -->
+    <div id="detail" class="detail-view" onclick="closeDetail()">
+        <img id="detail-img" src="" class="max-w-full max-h-[80vh] rounded-lg shadow-2xl transition-transform duration-500 scale-50">
+        <div class="absolute bottom-10 text-center">
+            <h2 id="detail-title" class="text-2xl font-bold text-amber-400"></h2>
+            <p id="detail-desc" class="text-white/60 text-sm mt-2"></p>
+        </div>
+    </div>
+
+    <audio id="bg-audio" loop>
+        <source id="audio-source" src="" type="audio/mpeg">
+    </audio>
+
+    <script>
+        /**
+         * PENGATURAN MUSIK & GAMBAR
+         * Silakan ganti URL di bawah ini
+         */
+        const CONFIG = {
+            audioUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3", // PASANG URL SUARA DI SINI
+            images: [
+                { type: 'cover', title: 'ELKAIRO', subtitle: 'A JOURNEY THROUGH TIME' },
+		{ url: 'https://teddymutadi.github.io/pasuruan/prigen17.jfif?auto=format&fit=crop&w=800&q=80'},
+                { url: 'https://teddymutadi.github.io/pasuruan/prigen2.jfif?auto=format&fit=crop&w=800&q=80'},
+                { url: 'https://teddymutadi.github.io/pasuruan/prigen3.jfif?auto=format&fit=crop&w=800&q=80'},
+                { url: 'https://teddymutadi.github.io/pasuruan/prigen4.jfif?auto=format&fit=crop&w=800&q=80'},
+                { url: 'https://teddymutadi.github.io/pasuruan/prigen6.jfif?auto=format&fit=crop&w=800&q=80'},
+                { url: 'https://teddymutadi.github.io/pasuruan/prigen9.jfif?auto=format&fit=crop&w=800&q=80'},
+                { url: 'https://teddymutadi.github.io/pasuruan/prigen10.jfif?auto=format&fit=crop&w=800&q=80'},
+                { url: 'https://teddymutadi.github.io/pasuruan/prigen14.jfif?auto=format&fit=crop&w=800&q=80'},
+                { url: 'https://teddymutadi.github.io/pasuruan/prigen15.jfif?auto=format&fit=crop&w=800&q=80'},
+                { url: 'https://teddymutadi.github.io/pasuruan/prigen16.jfif?auto=format&fit=crop&w=800&q=80'},
+               { type: 'back', title: 'FINISH', subtitle: 'MEMORIES ARE FOREVER' }
+            ]
+        };
+
+        let currentIndex = 0;
+        const deck = document.getElementById('deck');
+        const audio = document.getElementById('bg-audio');
+        const audioSource = document.getElementById('audio-source');
+        
+        // Setup Audio
+        audioSource.src = CONFIG.audioUrl;
+        audio.volume = 0.5;
+        audio.load();
+
+        function init() {
+            // Create Bokeh Particles
+            const bokehContainer = document.getElementById('bokeh-bg');
+            for (let i = 0; i < 15; i++) {
+                const bokeh = document.createElement('div');
+                bokeh.className = 'bokeh';
+                const size = Math.random() * 300 + 100;
+                bokeh.style.width = `${size}px`;
+                bokeh.style.height = `${size}px`;
+                bokeh.style.left = `${Math.random() * 100}%`;
+                bokeh.style.top = `${Math.random() * 100}%`;
+                bokeh.style.animationDuration = `${Math.random() * 20 + 10}s`;
+                bokeh.style.animationDelay = `${Math.random() * -20}s`;
+                bokehContainer.appendChild(bokeh);
+            }
+
+            CONFIG.images.forEach((data, i) => {
+                const card = document.createElement('div');
+                card.className = 'photo-card';
+                
+                const frameContent = (data.type === 'cover' || data.type === 'back') 
+                    ? `
+                        <div class="flex flex-col items-center justify-center p-8 text-center h-full">
+                            <span class="text-white/30 text-[9px] tracking-[0.6em] mb-6 font-light uppercase">${data.type === 'cover' ? 'Opening' : 'The End'}</span>
+                            <h2 class="text-3xl font-light text-white tracking-[0.3em] mb-4 uppercase">${data.title}</h2>
+                            <div class="w-12 h-[1px] bg-white/20 mb-6"></div>
+                            <p class="text-[9px] text-white/40 tracking-[0.4em] font-medium leading-relaxed">${data.subtitle}</p>
+                        </div>
+                    `
+                    : `<img src="${data.url}" alt="${data.title}">`;
+
+                card.innerHTML = `
+                    <div class="shimmer-sweep"></div>
+                    <div class="photo-frame-inner">
+                        ${frameContent}
+                    </div>
+                `;
+
+                card.addEventListener('click', (e) => {
+                    if (i === currentIndex) {
+                        // Tap center photo to go to next as requested
+                        next();
+                        // If you still want zoom, you can call openDetail(data) instead,
+                        // but user explicitly asked for tap to advance.
+                    } else {
+                        currentIndex = i;
+                        updateDeck();
+                    }
+                });
+
+                deck.appendChild(card);
+            });
+            updateDeck();
+        }
+
+        function updateDeck() {
+            const cards = document.querySelectorAll('.photo-card');
+            const counter = document.getElementById('counter');
+            
+            cards.forEach((card, i) => {
+                const diff = i - currentIndex;
+                
+                // Deep Space / Crystal Physics
+                let z = -Math.abs(diff) * 250;
+                let x = diff * 80;
+                let y = diff * -10;
+                let rotateY = diff * -25;
+                let opacity = 1 - Math.abs(diff) * 0.4;
+                let blur = Math.abs(diff) * 4;
+                
+                if (diff === 0) {
+                    card.style.transform = `translateZ(150px) rotateY(0deg) scale(1.1)`;
+                    card.style.zIndex = 1000;
+                    card.classList.add('active-float');
+                    card.style.opacity = 1;
+                    card.style.filter = `blur(0px) brightness(1.2)`;
+                } else {
+                    card.style.transform = `translateX(${x}px) translateY(${y}px) translateZ(${z}px) rotateY(${rotateY}deg)`;
+                    card.style.zIndex = 500 - Math.abs(diff);
+                    card.classList.remove('active-float');
+                    card.style.opacity = Math.max(opacity, 0);
+                    card.style.filter = `blur(${blur}px) brightness(0.5)`;
+                }
+
+                card.style.pointerEvents = Math.abs(diff) > 2 ? 'none' : 'auto';
+            });
+
+            counter.innerText = `${String(currentIndex + 1).padStart(2, '0')} / ${String(CONFIG.images.length).padStart(2, '0')}`;
+        }
+
+        function next() {
+            if (currentIndex < CONFIG.images.length - 1) {
+                currentIndex++;
+                updateDeck();
+            }
+        }
+
+        function prev() {
+            if (currentIndex > 0) {
+                currentIndex--;
+                updateDeck();
+            }
+        }
+
+        // Swipe Logic
+        let touchStart = 0;
+        window.addEventListener('touchstart', e => touchStart = e.touches[0].clientX);
+        window.addEventListener('touchend', e => {
+            const touchEnd = e.changedTouches[0].clientX;
+            if (touchStart - touchEnd > 50) next();
+            if (touchEnd - touchStart > 50) prev();
+        });
+
+        // Detail View Logic
+        function openDetail(data) {
+            const detail = document.getElementById('detail');
+            const img = document.getElementById('detail-img');
+            document.getElementById('detail-title').innerText = data.title;
+            document.getElementById('detail-desc').innerText = data.desc;
+            img.src = data.url;
+            detail.classList.add('active');
+            setTimeout(() => img.style.transform = 'scale(1)', 50);
+        }
+
+        function closeDetail() {
+            const detail = document.getElementById('detail');
+            const img = document.getElementById('detail-img');
+            img.style.transform = 'scale(0.5)';
+            setTimeout(() => detail.classList.remove('active'), 300);
+        }
+
+        // Music Logic
+        let isPlaying = false;
+        function toggleMusic() {
+            if (isPlaying) {
+                audio.pause();
+                document.getElementById('music-on').classList.add('hidden');
+                document.getElementById('music-off').classList.remove('hidden');
+            } else {
+                audio.play();
+                document.getElementById('music-on').classList.remove('hidden');
+                document.getElementById('music-off').classList.add('hidden');
+            }
+            isPlaying = !isPlaying;
+        }
+
+
+
+        // Interaction to unlock audio
+        window.addEventListener('click', () => {
+            if (!isPlaying) {
+                audio.play().then(() => {
+                    isPlaying = true;
+                    document.getElementById('music-on').classList.remove('hidden');
+                    document.getElementById('music-off').classList.add('hidden');
+                }).catch(() => {});
+            }
+        }, { once: true });
+
+        init();
+    </script>
+</body>
+</html>
